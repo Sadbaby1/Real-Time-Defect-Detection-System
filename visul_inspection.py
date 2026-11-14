@@ -22,6 +22,9 @@ while True:
         print("Error: Can't receive frame (stream end?). Exiting ...")
         break
 
+    # Save a clean copy of the frame before drawing annotations
+    clean_frame = frame.copy()
+
     # Identify image segmentation
     results = model(frame, conf=0.5)
     result = results[0]
@@ -43,18 +46,36 @@ while True:
                 (0, 255, 0),
                 2,
             )
-    # 2. Fill detected objects with semi-transparent color
+    # 2. Fill detected objects with semi-transparent color and extract
     if result.masks is not None:
-        overlay = frame.copy()
+        overlay = clean_frame.copy()
+        # Binary mask for isolating the segmented objects
+        mask = np.zeros(clean_frame.shape[:2], dtype=np.uint8)
+
         for segment in result.masks.xy:
             if len(segment) > 0:
                 pts = segment.astype(np.int32)
-                # Fill polygon on the overlay layer
-                cv2.fillPoly(overlay, [pts], color=(255, 0, 0))
+                # Draw contour border on the  object
+                cv2.polylines(
+                    frame, [pts], isClosed=True, color=(255, 0, 0), thickness=2
+                )
 
-        # Blend overlay with original frame (alpha=0.5 transparency)
+                # Fill polygon on the overlay layer (for transparency)
+                cv2.fillPoly(overlay, [pts], color=(255, 0, 0))
+                # Fill polygon on the binary mask for extraction
+                cv2.fillPoly(mask, [pts], 255)
+
+        # Blend overlay with clean_frame so extracted object has the transparent mask
         alpha = 0.5
+        masked_frame = cv2.addWeighted(overlay, alpha, clean_frame, 1 - alpha, 0)
+        
+        # Extract the object WITH the transparent mask on it
+        extracted_objects = cv2.bitwise_and(masked_frame, masked_frame, mask=mask)
+
+        # Blend overlay with camera frame for the main feed
         cv2.addWeighted(overlay, alpha, frame, 1 - alpha, 0, frame)
+
+        cv2.imshow("Extracted objects", extracted_objects)
 
     # Display the resulting frame
     cv2.imshow("Camera Feed", frame)
