@@ -22,18 +22,11 @@ while True:
         print("Error: Can't receive frame (stream end?). Exiting ...")
         break
 
-    # identify image segmentation
-    # bboxes, class_ids, segments, scores = model.predict(frame, conf=0.5)
-    # results = model("path/to/image.jpg", task="semantic")
+    # Identify image segmentation
     results = model(frame, conf=0.5)
-    # plot the segmented objects using built in function
-    # annotated_frame = results[0].plot()
-
-    # segement manualy
     result = results[0]
 
-    # loop through all detected objects
-    # 1. Bounding boxes, classes, and confidence scores
+    # 1. Draw bounding boxes, classes, and confidence scores on top
     if result.boxes is not None:
         for box, cls_id, conf in zip(
             result.boxes.xyxy, result.boxes.cls, result.boxes.conf
@@ -50,21 +43,21 @@ while True:
                 (0, 255, 0),
                 2,
             )
-            
+    # 2. Fill detected objects with semi-transparent color
+    if result.masks is not None:
+        overlay = frame.copy()
+        for segment in result.masks.xy:
+            if len(segment) > 0:
+                pts = segment.astype(np.int32)
+                # Fill polygon on the overlay layer
+                cv2.fillPoly(overlay, [pts], color=(255, 0, 0))
 
-    """
-    # loop through all detected objects
-    
-    for bbox, class_id, segment, score in zip(bboxes, class_ids, segments, scores):
-        # draw bounding box and label
-        # show bbox
-        x, y, X2, Y2 = map(int, bbox)
-        cv2.rectangle(frame, (x, y), (X2, Y2), (0, 255, 0), 2)
+        # Blend overlay with original frame (alpha=0.5 transparency)
+        alpha = 0.5
+        cv2.addWeighted(overlay, alpha, frame, 1 - alpha, 0, frame)
 
-        # cv2.putText(frame, f"Class: {class_id}, Score: {score:.2f}", (int(bbox[0]), int(bbox[1]) - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
-    """
     # Display the resulting frame
-    cv2.imshow("Camera Feed",   frame)
+    cv2.imshow("Camera Feed", frame)
 
     # Press 'q' on keyboard to exit
     if cv2.waitKey(1) & 0xFF == ord("q"):
