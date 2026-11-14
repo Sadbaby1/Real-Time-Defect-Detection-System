@@ -1,0 +1,63 @@
+#YOLO
+
+Models: train, val, predict
+        --> train : training the model
+        --> val : evaluate and see the performance of the model
+        --> predict : for performing detection on unsine dataset
+
+Tasks : detect, segment, classify
+        --> detect : object detection task
+        --> segment : for image gegmentation
+        --> classify : for classiftication
+
+data: format can difer for task type: data.yaml data_folder, dataset_name 
+
+------------------------------------------------------------------>>>>>
+commands cmd:
+        --> detect : !yolo task=detect mode=predict model=yolov8n.pt source="image_path"
+        --> segment : !yolo task=segement mode=predict model=yolov8n-seg.pt source="image_path"
+        --> classify : !yolo task=classify mode=predict model=yolov8n-cls.pt source="image_path"
+
+
+------------------------------------------------------------>>>>>
+commands python script:
+        --> detect : 
+                    from ultralytics import YOLO
+                    model = YOLO(yolov8n.pt)
+                    model.predict(imag_path)# predict on an inmage
+
+        --> segment : !yolo task=segement model= yolov8n-seg.pt source="image_path"
+                    from ultralytics import YOLO
+                    model = YOLO(yolov8n-seg.pt)
+                    model.predict(imag_path)
+
+        --> classify : !yolo task=classify model= yolov8n source="image_path"
+        from ultralytics import YOLO
+                    model = YOLO(yolov8n-cls.pt)
+                    model.predict(imag_path)
+                    model.predict(imag_path)
+
+------------------------------------------------------------------>>>>>
+training:
+
+from ultralytics import YOLO
+model = YOLO("yolov8n.pt")
+model.train(
+    data="data.yaml", 
+    epochs=300,
+    patience=25,
+    imgsz=1280,
+    batch=8,
+    seed=42,
+    )
+
+------------------------------------------------------------------------->>>
+validate model:
+model = YOLO("run/detect/train/weight/best.pt)
+model.val(image_path)
+
+
+
+
+
+
