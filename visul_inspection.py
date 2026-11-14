@@ -72,14 +72,20 @@ while True:
                 )
 
                 # Extract the object WITH the transparent mask on it
-                extracted_objects = cv2.bitwise_and(
+                extracted_object = cv2.bitwise_and(
                     masked_frame, masked_frame, mask=mask
                 )
 
                 # Blend overlay with camera frame for the main feed
                 cv2.addWeighted(overlay, alpha, frame, 1 - alpha, 0, frame)
 
-    cv2.imshow("Extracted objects", extracted_objects)
+    # cut the extracted object to the bounding box area
+    if result.boxes is not None:
+        for box in result.boxes.xyxy:
+            x1, y1, x2, y2 = map(int, box)
+            extracted_object = extracted_object[y1:y2, x1:x2]
+
+    cv2.imshow("Extracted objects", extracted_object)
 
     # Display the resulting frame
     cv2.imshow("Camera Feed", frame)
