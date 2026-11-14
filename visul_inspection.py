@@ -65,17 +65,21 @@ while True:
                 # Fill polygon on the binary mask for extraction
                 cv2.fillPoly(mask, [pts], 255)
 
-        # Blend overlay with clean_frame so extracted object has the transparent mask
-        alpha = 0.5
-        masked_frame = cv2.addWeighted(overlay, alpha, clean_frame, 1 - alpha, 0)
-        
-        # Extract the object WITH the transparent mask on it
-        extracted_objects = cv2.bitwise_and(masked_frame, masked_frame, mask=mask)
+                # Blend overlay with clean_frame so extracted object has the transparent mask
+                alpha = 0.5
+                masked_frame = cv2.addWeighted(
+                    overlay, alpha, clean_frame, 1 - alpha, 0
+                )
 
-        # Blend overlay with camera frame for the main feed
-        cv2.addWeighted(overlay, alpha, frame, 1 - alpha, 0, frame)
+                # Extract the object WITH the transparent mask on it
+                extracted_objects = cv2.bitwise_and(
+                    masked_frame, masked_frame, mask=mask
+                )
 
-        cv2.imshow("Extracted objects", extracted_objects)
+                # Blend overlay with camera frame for the main feed
+                cv2.addWeighted(overlay, alpha, frame, 1 - alpha, 0, frame)
+
+    cv2.imshow("Extracted objects", extracted_objects)
 
     # Display the resulting frame
     cv2.imshow("Camera Feed", frame)
